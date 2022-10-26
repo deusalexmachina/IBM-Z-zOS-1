@@ -2486,4 +2486,12 @@ ________________________________________________________________________________
 32767(x'7FFF') Unknown error.  An unknown error resulted in the termination of the API request.  Likely an abend occurred during the
                the request.  
 
-              Report the problem to the Storage Administrator along with any last result API diagnostic information.   
+              Report the problem to the Storage Administrator along with any last result API diagnostic information.
+	      
+________________________________________________________________________________________________________________________________________
+65535(x'FFFF') Parm error.  One or more C API parameters are missing or in error.  A return code of -1 (x'FFFF') is returned to the 
+               application.
+               
+              Verify all the required parameters are provided and are defined with the appropiate types as described in the C API
+	      signature.  	      
+	      
