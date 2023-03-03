@@ -144,7 +144,7 @@ When secondary index keynames are paired with an array, alternate keys will be g
 
 ### Active Secondary Indexes
 
-Secondary indexes are created inactive by default and only while the database is disconnected.  The index can then be built and activated by adding the index at any point in time after the creation of the index.  Note that the time it takes to build an index is relative to the size of the database.  All active indexes are updated when new documents are inserted, erased, or updated via the primary or any of the other (active) secondary indexes.  If a secondary index is no longer required, it can be switched to inactive (quiesced) across the sysplex.  Activating secondary indexes acquire several large (2 GIG) temporary buffers. Ensure any memory retrictions allow for the obtaining of the necessary buffers.
+Secondary indexes are created inactive by default and only while the database is disconnected.  The index can then be built and activated by adding the index at any point in time after the creation of the index.  Note that the time it takes to build an index is relative to the size of the database.  All active indexes are updated when new documents are inserted, deleted, or updated via the primary or any of the other (active) secondary indexes.  If a secondary index is no longer required, it can be switched to inactive (quiesced) across the sysplex.  Activating secondary indexes acquire several large (2 GIG) temporary buffers. Ensure any memory retrictions allow for the obtaining of the necessary buffers.
 
 Once a secondary index is switched to inactive, it will no longer be updated and may become down level (out of sync) with the documents in the database.  While an index is inactive, any requests to access documents via the inactive index will fail.  Switching the index to inactive will remove the additional overhead of maintaining that index.  Inactive indexes can be re-activated and rebuilt by re-adding the index.
 
@@ -180,7 +180,7 @@ Multikey names can also span into imbedded documents or an array of imbedded doc
 
 ## Document Retrieval
 
-Documents can be directly read, updated, or erased by specifying the desired keyname and value of the specific document to be retrieved/updated.  Additionally, documents can be retrieved in an ordered fashion through the use of secondary indexes.  The application can position (`znsq_position()`) into the secondary index to a specific key value, or for any value greater than or equal to the desired key range. The documents can then be retrieved in a (sequential) ascending or descending order, and optionally updated (`znsq_update_result()`) or deleted (`znsq_delete_result()`) following the retrieval. When using sequential access to update or erase documents, the documents will not be visible on disk and to other sharers until either: the end of the buffer is reached, a `znsq_close_result()` is issued, or a successful close of the data base.  When a `znsq_close_result()` is issued, positioning is ended and a new `znsq_position()` must be issued to re-establish position within the secondary index.  EzNoSQL will return a reason code when reading alternate (non-unique) duplicate keys.
+Documents can be directly read, updated, or deleted by specifying the desired keyname and value of the specific document to be retrieved/updated.  Additionally, documents can be retrieved in an ordered fashion through the use of secondary indexes.  The application can position (`znsq_position()`) into the secondary index to a specific key value, or for any value greater than or equal to the desired key range. The documents can then be retrieved in a (sequential) ascending or descending order, and optionally updated (`znsq_update_result()`) or deleted (`znsq_delete_result()`) following the retrieval. When using sequential access to update or delete documents, the documents will not be visible on disk and to other sharers until either: the end of the buffer is reached, a `znsq_close_result()` is issued, or a successful close of the data base.  When a `znsq_close_result()` is issued, positioning is ended and a new `znsq_position()` must be issued to re-establish position within the secondary index.  EzNoSQL will return a reason code when reading alternate (non-unique) duplicate keys.
 
 In order to iterate in an ordered fashion over the primary key, and optionally update/delete the document(s), use a direct read (`znsq_read()`) with the update option for the primary key.  Then optionally update (`znsq_update_result()`), delete (`znsq_delete_result()`), or end the update (`znsq_close_result()`).  Attempting to use the position (`znsq_position()`) API with the `znsq_search_method` greater than or equal to may result in unpredictable results when used with primary indexes.
 
@@ -702,7 +702,7 @@ If an error occurred, the return code contains the detailed error reason. The ma
 | version        | `int`     | API version.|
 | znsq_integrity | `enum`    | The (read) integrity specifies whether shared locks will be obtained for retrieves and the duration the lock will be held. </br>Read integrity option:</br>`0` indicates no read integrity (NRI) (default).</br>`1` indicates consist read (CR).</br>`2` indicates consistent read extended (CRE).</br>Refer to section Non-Recoverable vs Recoverable Databases for information on this option.|
 | znsq_timeout   | `int16_t` | Timeout specifies how long a lock request will wait (in seconds) for the lock before terminating.</br>Lock wait time out in seconds.  Default 0. |
-| znsq_boolean   | `enum`    | The boolean auto commit option specifies if EzNoSQL will issue a commit after any type of update (write, update, erase), or a read integrity extended (CRE) request on behalf if the user. If this option is omitted, then commits will be performed by the system after each update or CRE read. Note that commits are required only for databases created with the log_options of undo or all, or for reads with the use of the CRE option. Commiting after every update request can incur overhead compared to optimizing commits for larger groups of updates. Conversely, commiting to infrequently can impact other sharers of the database from accessing the locked documents:</br>`0` indicates auto commit (default)</br>`1` indicates auto commit</br>`2` indicates no auto commit</br>Refer to section Non-Recoverable vs Recoverable Databases for information on this option.|
+| znsq_boolean   | `enum`    | The boolean auto commit option specifies if EzNoSQL will issue a commit after any type of update (write, update, delete), or a read integrity extended (CRE) request on behalf if the user. If this option is omitted, then commits will be performed by the system after each update or CRE read. Note that commits are required only for databases created with the log_options of undo or all, or for reads with the use of the CRE option. Commiting after every update request can incur overhead compared to optimizing commits for larger groups of updates. Conversely, commiting to infrequently can impact other sharers of the database from accessing the locked documents:</br>`0` indicates auto commit (default)</br>`1` indicates auto commit</br>`2` indicates no auto commit</br>Refer to section Non-Recoverable vs Recoverable Databases for information on this option.|
 
 Example of opening an EzNoSQL database:
 ```C
@@ -809,7 +809,7 @@ If an error occurred, the return code contains the detailed error reason. The ma
 #### Member attributes
 | member     | type                | description |
 | ---------- | ------------------- | ----------- |
-| result_set | `znsq_result_set_t` | Returned when the update option is set in flags and to be used for subsequent `znsq_update_result()` or `znsq_erase_result()` APIs.|
+| result_set | `znsq_result_set_t` | Returned when the update option is set in flags and to be used for subsequent `znsq_update_result()` or `znsq_delete_result()` APIs.|
 
 Example of reading a document from an EzNoSQL database:
 ```C
@@ -1261,7 +1261,7 @@ If the auto-commit option is active for the connection, then a commit will be is
 
 `znsq_connection_t`: C-constant contains the connection token from a previous `znsq_open()`.
 
-`znsq_result_set_t': int32_t token returned by a previous `znsq_read()` with the update option or `znsq_next_result()`.
+`znsq_result_set_t`: int32_t token returned by a previous `znsq_read()` with the update option or `znsq_next_result()`.
 
 `buf`: contains a copy of the updated document to replace the existing version of the document. All secondary indexes will be updated to reflect any alternate key changes found in the new version of the document.
 
@@ -1835,7 +1835,7 @@ ________________________________________________________________________________
              alternate indexes, a znsq_drop_index followed by a znsq_add_index will rebuild the index.  Save a copy
              of the damaged database and report the problem to the z/OS Storage Administrator.
 ___________________________________________________________________________________________________________________
-0090(X'5A')  Access type not allowed. A write, update, or erase request was issued against a database opened for
+0090(X'5A')  Access type not allowed. A write, update, or delete request was issued against a database opened for
              input (read) only.
 
              If write access is required, open the database for output if eligible.
@@ -1922,7 +1922,7 @@ ________________________________________________________________________________
 0107(X'6B') - Reserved.
 0111(X'6F')
 ________________________________________________________________________________________________________________________
-0112(X'70')  The database is quiesced for backup.  A request to insert/update/erase a document occurred while the data
+0112(X'70')  The database is quiesced for backup.  A request to insert/update/delete a document occurred while the data
              set is temporarily quiesced for backup.
 
              Retry the request after the backup completes, define the database using a DCName for a Dataclas with the
