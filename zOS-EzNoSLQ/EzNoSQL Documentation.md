@@ -186,7 +186,7 @@ In order to iterate in an ordered fashion over the primary key, and optionally u
 
 While the alternate key value size is not restricted, the keys will be truncated after 251 bytes. Truncated keys may result in non-unique keys with other keys containing the same first 251 bytes.  Sequentially reading truncated keys may return the documents out of order and require further sorting by the application. EzNoSQL will return a reason code alerting the application if a truncated key is retrieved.
 
-When using alternate keys, documents may be retrieved by specifying an exact match, or greater than or equal to (via a full or parital key value). If the key value is a string, then the parital key value should still contain an ending double quote character.
+When using alternate keys, documents may be retrieved by specifying an exact match, or greater than or equal to (via a full or partial key value). If the key value is a string, then the partial key value should still contain an ending double quote character.
 
 
 ## Recoverable Databases
