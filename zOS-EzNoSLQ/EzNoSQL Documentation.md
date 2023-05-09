@@ -1798,7 +1798,7 @@ ________________________________________________________________________________
              Reduce the number of concurrent requests or issue another znsq_open in the same program or other
              sharing instances.
 ________________________________________________________________________________________________________________
-0084(X'54')  Illegal key change.  An update request for a document through an alternate index attemted to change
+0084(X'54')  Illegal key change.  An update request for a document through an alternate index attempted to change
              the primary key.  Primary keys cannot be changed once the document is inserted.
 
              Correct the document to ensure the primary key has not been changed.
